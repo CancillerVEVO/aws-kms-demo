@@ -3,7 +3,6 @@ package com.stellatech.elopezo.kms.controllers;
 import com.stellatech.elopezo.kms.dao.entities.CardEntity;
 import com.stellatech.elopezo.kms.model.Card;
 import com.stellatech.elopezo.kms.services.CardService;
-import com.stellatech.elopezo.kms.utils.KMSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

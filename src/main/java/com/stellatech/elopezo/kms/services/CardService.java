@@ -1,12 +1,13 @@
 package com.stellatech.elopezo.kms.services;
 
+import com.stellatech.elopezo.kms.adapters.services.CryptoService;
 import com.stellatech.elopezo.kms.dao.entities.CardEntity;
 import com.stellatech.elopezo.kms.model.Card;
 import com.stellatech.elopezo.kms.repositories.CardRepository;
-import com.stellatech.elopezo.kms.utils.KMSUtils;
 import com.stellatech.elopezo.kms.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,11 +15,12 @@ public class CardService {
 
     private static final Logger log = LoggerFactory.getLogger(CardService.class);
     private final CardRepository cardRepository;
-    private final KMSUtils kmsUtils;
+    private final CryptoService cryptoService;
 
-    public CardService(CardRepository cardRepository, KMSUtils kmsUtils) {
+    @Autowired
+    public CardService(CardRepository cardRepository, CryptoService cryptoService) {
         this.cardRepository = cardRepository;
-        this.kmsUtils = kmsUtils;
+        this.cryptoService = cryptoService;
     }
 
     public CardEntity saveCard(Card card) {
@@ -29,7 +31,7 @@ public class CardService {
                 card.getCvv()
         );
 
-        String encryptedCard = kmsUtils.encrypt(serializedCard);
+        String encryptedCard = cryptoService.encrypt(serializedCard);
 
         String maskedCard = Utils.maskCard(card.getCardNumber());
 
@@ -42,19 +44,18 @@ public class CardService {
                 token(encryptedCard).
                 build();
 
-      return  cardRepository.save(cardEntity);
+        return cardRepository.save(cardEntity);
     }
 
     public CardEntity getCard(Long id) {
 
         CardEntity cardEntity = cardRepository.findById(id).orElseThrow(() -> new RuntimeException("Card not found"));
 
-        String decryptedCard = kmsUtils.decrypt(cardEntity.getToken());
+        String decryptedCard = cryptoService.decrypt(cardEntity.getToken());
 
 
         return cardEntity;
     }
-
 
 
 }
