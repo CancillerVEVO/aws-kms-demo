@@ -29,17 +29,6 @@
 	<properties>
 		<java.version>22</java.version>
 	</properties>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>software.amazon.awssdk</groupId>
-				<artifactId>bom</artifactId>
-				<version>2.26.5</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -69,6 +58,7 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>kms</artifactId>
+			<version>2.26.4</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-encryption-sdk-java -->
 		<dependency>
@@ -76,7 +66,18 @@
 			<artifactId>aws-encryption-sdk-java</artifactId>
 			<version>3.0.1</version>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core -->
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>6.5.2.Final</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/software.amazon.cryptography/aws-cryptographic-material-providers -->
+		<dependency>
+			<groupId>software.amazon.cryptography</groupId>
+			<artifactId>aws-cryptographic-material-providers</artifactId>
+			<version>1.5.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
