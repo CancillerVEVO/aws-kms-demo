@@ -1,10 +1,7 @@
 package com.stellatech.elopezo.kms.dao.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
@@ -24,4 +21,8 @@ public class CardEntity {
     private String cvv;
     private Date expirationDate;
     private String token;
+
+
+    @OneToOne(mappedBy = "card", cascade = CascadeType.ALL)
+    private CardVaultEntity cardVault;
 }
