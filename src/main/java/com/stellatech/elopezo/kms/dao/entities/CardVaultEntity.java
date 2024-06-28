@@ -21,7 +21,7 @@ public class CardVaultEntity {
     private Long customerCardId;
 
     @NaturalId
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, columnDefinition = "TEXT")
     private String privateToken;
 
     @OneToOne

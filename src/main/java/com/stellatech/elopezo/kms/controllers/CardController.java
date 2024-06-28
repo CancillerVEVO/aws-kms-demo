@@ -22,18 +22,16 @@ public class CardController {
     }
 
     @PostMapping
-    public CardEntity saveCard(@RequestBody Card card) {
+    public CardEntity saveCard(@RequestBody Card card) throws Exception {
         log.info("Received request to save card: {}", card);
 
         return cardService.saveCard(card);
     }
 
     @GetMapping("/{id}")
-    public CardEntity getCard(@PathVariable Long id) {
+    public CardEntity getCard(@PathVariable Long id) throws Exception {
         log.info("Received request to get card with id: {}", id);
 
-        CardEntity card = cardService.getCard(id);
-
-        return card;
+        return cardService.getCard(id);
     }
 }
