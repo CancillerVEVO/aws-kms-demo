@@ -3,7 +3,6 @@ package com.stellatech.elopezo.kms.controllers;
 import com.stellatech.elopezo.kms.dao.entities.CardEntity;
 import com.stellatech.elopezo.kms.model.Card;
 import com.stellatech.elopezo.kms.services.CardService;
-import com.stellatech.elopezo.kms.utils.KMSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,18 +22,16 @@ public class CardController {
     }
 
     @PostMapping
-    public CardEntity saveCard(@RequestBody Card card) {
+    public CardEntity saveCard(@RequestBody Card card) throws Exception {
         log.info("Received request to save card: {}", card);
 
         return cardService.saveCard(card);
     }
 
     @GetMapping("/{id}")
-    public CardEntity getCard(@PathVariable Long id) {
+    public CardEntity getCard(@PathVariable Long id) throws Exception {
         log.info("Received request to get card with id: {}", id);
 
-        CardEntity card = cardService.getCard(id);
-
-        return card;
+        return cardService.getCard(id);
     }
 }

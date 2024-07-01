@@ -1,8 +1,10 @@
-package com.stellatech.elopezo.kms.utils;
+package com.stellatech.elopezo.kms.adapters.crypto;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
+import com.stellatech.elopezo.kms.adapters.services.CryptoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kms.KmsClient;
@@ -14,14 +16,19 @@ import software.amazon.awssdk.services.kms.model.EncryptResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-@RequiredArgsConstructor
-@Log
 @Component
-public class KMSUtils{
+@Profile("kms")
+public class KMSCryptoAdapter implements CryptoService {
+
+    private static final Logger log = LoggerFactory.getLogger(KMSCryptoAdapter.class);
     private final KmsClient kmsClient ;
 
     @Value("${cmkKeyARN}")
     private String cmkKeyARN;
+
+    public KMSCryptoAdapter(KmsClient kmsClient) {
+        this.kmsClient = kmsClient;
+    }
 
     public String encrypt(String plainText) {
         log.info("KMSUtils: Encrypting data");
@@ -67,5 +74,4 @@ public class KMSUtils{
         log.info("Decrypt request built successfully");
         return decryptRequest;
     }
-
 }
