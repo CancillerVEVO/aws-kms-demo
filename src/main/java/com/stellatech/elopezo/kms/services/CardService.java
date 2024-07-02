@@ -1,7 +1,7 @@
 package com.stellatech.elopezo.kms.services;
 
 import com.stellatech.elopezo.kms.adapters.crypto.AESCryptoAdapter;
-import com.stellatech.elopezo.kms.adapters.services.CryptoService;
+import com.stellatech.elopezo.kms.adapters.services.KeyWrapperService;
 import com.stellatech.elopezo.kms.dao.entities.CardEntity;
 import com.stellatech.elopezo.kms.dao.entities.CardVaultEntity;
 import com.stellatech.elopezo.kms.model.Card;
@@ -20,12 +20,12 @@ public class CardService {
 
     private static final Logger log = LoggerFactory.getLogger(CardService.class);
     private final CardRepository cardRepository;
-    private final CryptoService cryptoService;
+    private final KeyWrapperService keyWrapperService;
 
     @Autowired
-    public CardService(CardRepository cardRepository, CryptoService cryptoService) {
+    public CardService(CardRepository cardRepository, KeyWrapperService keyWrapperService) {
         this.cardRepository = cardRepository;
-        this.cryptoService = cryptoService;
+        this.keyWrapperService = keyWrapperService;
     }
 
     public CardEntity saveCard(Card card) throws Exception {
@@ -45,7 +45,7 @@ public class CardService {
         String privateToken = AESCryptoAdapter.encrypt(serializedCard, pulicTokenKey);
 
         // Utilizamos el servicio externo de KMS/Vault para cifrar el publicToken
-        String encryptedPublicToken = cryptoService.encrypt(publicToken);
+        String encryptedPublicToken = keyWrapperService.encrypt(publicToken);
 
         CardEntity cardEntity = CardEntity.builder()
                 .cardNumber(maskedCard)
@@ -77,7 +77,7 @@ public class CardService {
 
 
         // Utilizamos el servicio externo de KMS/Vault para descifrar el publicToken
-        String publicToken = cryptoService.decrypt(cardEntity.getPublicToken());
+        String publicToken = keyWrapperService.decrypt(cardEntity.getPublicToken());
 
         SecretKey pulicTokenKey = AESUtil.decodeAESKey(publicToken);
 

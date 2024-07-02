@@ -17,6 +17,7 @@
       </ul>
     </li>
     <li><a href="#uso-del-programa">Uso del programa</a></li>
+    <li><a href="#notas-sobre-el-codigo">Notas sobre el codigo</a></li>
     <li><a href="#recursos-de-referencia">Recursos de referencia</a></li>
   </ol>
 </details>
@@ -36,12 +37,7 @@ En el modelo de datos de este proyecto cada tarjeta guarde un public_token y un 
 
 Para descirar los datos del private_token ahora sera necesario contar primero con el valor descifrado del public_token.
 
-<style>
-    .mermaid {
-        font-family: "Arial", sans-serif;
-      width: 400px;
-    }
-</style>
+
 ```mermaid 
 graph TD
    A[Iniciar] --> B[Generar public_token]
@@ -65,7 +61,6 @@ end
 subgraph Guardado
 I
 end
-
 ```
 
 Para leer mas sobre "envelope encryption" puede ver los <a href="#recursos-de-referencia">recursos de referencia</a>.
@@ -127,7 +122,7 @@ Para instalar el programa, siga los siguientes pasos:
     docker-compose up
     ```
    
-5. Dentro del application.properties, cambie el valor de la variable **service** a **vault** o **kms** para elegir el servicio de manejo de llaves que se desea utilizar.
+5. Dentro del application.properties, cambie el valor de la variable **spring.profiles.active** a **vault** o **kms** para elegir el servicio de manejo de llaves que se desea utilizar.
     ```properties
     spring.profiles.active=vault
     ```
@@ -175,22 +170,135 @@ x-common-env: &cenv
 
 <!-- USAGE EXAMPLES -->
 ## Uso del programa
+### Endpoints
+#### POST Añadir tarjeta
+http://localhost:8080/card
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Estructura BODY
+```json
+{
+    "cardNumber": "6969",
+    "cardHolderName": "Emmanuel López Ojeda",
+    "lastFourDigits": "1111",
+    "cvv": "123",
+    "expirationDate": "2027-01-01"
+}
+```
+Ejemplo de uso
+```sh
+curl -X POST http://localhost:8080/card -H "Content-Type: application/json" -d '{
+    "cardNumber": "6969",
+    "cardHolderName": "Emmanuel López Ojeda",
+    "lastFourDigits": "1111",
+    "cvv": "123",
+    "expirationDate": "2027-01-01"
+}'
+```
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+#### GET Obtener tarjeta
+
+http://localhost:8080/card/{cardId}
+
+Ejemplo de uso
+```sh
+curl -X GET http://localhost:8080/card/1
+```
+
+
+## Notas sobre el codigo
+El proyecto tiene un paquete llamado adapters/keywrapper. Dentro se encuentra la clase de KMS y Vault para la encripción y desencripción de los datos. 
+Ambos servicios implementan la interfaz KeyWrapperService, la cual tiene los métodos de encrypt y decrypt.
+```java
+public interface KeyWrapperService {
+    public String encrypt(String plaintext);
+    public String decrypt(String ciphertext);
+}
+```
+
+**Si se quiere ver la implementacion** de estos servicios, entonces vea la carpeta services, dentro de com.stellatech.elopezo.kms
+La clase CardService es donde se implementa la lógica de negocio para guardar y obtener las tarjetas. 
+
+**GUARDAR TARJETA**
+```java
+  public CardEntity saveCard(Card card) throws Exception {
+
+    String serializedCard = Utils.serializerCard(
+            card.getCardNumber(),
+            card.getExpirationDate(),
+            card.getCvv()
+    );
+
+    String maskedCard = Utils.maskCard(card.getCardNumber());
+
+    String publicToken = AESUtil.generateAESKey();
+    SecretKey pulicTokenKey = AESUtil.decodeAESKey(publicToken);
+
+    // Utilizar el public token para cifrar los datos de la tarjeta y crear el (privateToken)
+    String privateToken = AESCryptoAdapter.encrypt(serializedCard, pulicTokenKey);
+
+    // Utilizamos el servicio externo de KMS/Vault para cifrar el publicToken
+    String encryptedPublicToken = keyWrapperService.encrypt(publicToken);
+
+    CardEntity cardEntity = CardEntity.builder()
+            .cardNumber(maskedCard)
+            .cardHolderName(card.getCardHolderName())
+            .expirationDate(card.getExpirationDate())
+            .publicToken(encryptedPublicToken)
+            .lastFourDigits(card.getCardNumber().substring(card.getCardNumber().length() - 4))
+            .cvv("***")
+            .build();
+
+    CardEntity savedCard = cardRepository.save(cardEntity);
+
+    CardVaultEntity cardVaultEntity = CardVaultEntity.builder()
+            .privateToken(privateToken)
+            .card(savedCard)
+            .build();
+
+    savedCard.setCardVault(cardVaultEntity);
+
+    cardRepository.save(savedCard);
+
+    return savedCard;
+}
+```
+
+**OBTENER TARJETA**
+```java
+    public CardEntity getCard(Long id) throws Exception {
+
+        CardEntity cardEntity = cardRepository.findById(id).orElseThrow(() -> new RuntimeException("Card not found"));
+
+
+        // Utilizamos el servicio externo de KMS/Vault para descifrar el publicToken
+        String publicToken = keyWrapperService.decrypt(cardEntity.getPublicToken());
+
+        SecretKey pulicTokenKey = AESUtil.decodeAESKey(publicToken);
+
+        // Utilizamos el publicToken para descifrar los datos de la tarjeta
+        String serializedCard = AESCryptoAdapter.decrypt(cardEntity.getCardVault().getPrivateToken(), pulicTokenKey);
+
+        log.info("Card decrypted: {}", serializedCard);
+
+        return cardEntity;
+    }
+```
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
 
-<!-- ACKNOWLEDGMENTS -->
+<!-- RECURSOS DE REFERENCIA -->
 ## Recursos de referencia
 
 * [AWS KMS Envelope Encryption](https://medium.com/@dipandergoyal/aws-kms-envelop-encryption-explained-9db3bd56542b)
-
-
+* [Sobre como utilizar Vault CLI](https://developer.hashicorp.com/vault/tutorials/getting-started)
+* [Ejemplos de como utilizar SDK de AWS KMS](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/java_kms_code_examples.html)
+* [Sobre Spring Vault](https://docs.spring.io/spring-vault/reference/vault/vault.html)
+* [Data Security: an Introduction to AWS KMS and HashiCorp Vault](https://blog.gitguardian.com/talking-about-data-security-an-introduction-to-aws-kms-and-hashicorp-vault/)
+* [Want to Limit PCI DSS Scope? Use Tokenization](https://www.infosecinstitute.com/resources/management-compliance-auditing/want-limit-pci-dss-scope-use-tokenization/)
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 

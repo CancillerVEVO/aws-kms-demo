@@ -1,9 +1,7 @@
-package com.stellatech.elopezo.kms.adapters.crypto;
+package com.stellatech.elopezo.kms.adapters.keywrapper;
 
-
-import com.stellatech.elopezo.kms.adapters.services.CryptoService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.stellatech.elopezo.kms.adapters.services.KeyWrapperService;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -11,16 +9,16 @@ import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.core.VaultTransitOperations;
 
 @Component
+@Log
 @Profile("vault")
-public class VaultCryptoAdapter implements CryptoService {
+public class VaultKeyWrapperAdapter implements KeyWrapperService {
 
     @Value("${transit.key}")
     private String keyName;
 
-    private static final Logger log = LoggerFactory.getLogger(VaultCryptoAdapter.class);
     private final VaultTemplate vaultTemplate;
 
-    public VaultCryptoAdapter(VaultTemplate vaultTemplate) {
+    public VaultKeyWrapperAdapter(VaultTemplate vaultTemplate) {
         this.vaultTemplate = vaultTemplate;
     }
 

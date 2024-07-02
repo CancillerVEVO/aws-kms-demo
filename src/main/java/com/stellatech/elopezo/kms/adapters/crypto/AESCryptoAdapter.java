@@ -1,27 +1,17 @@
 package com.stellatech.elopezo.kms.adapters.crypto;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.services.kms.KmsClient;
 
 import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 @Component
 @Log
-public class AESCryptoAdapter {
-
-
-    private final KmsClient kmsClient;
-
-
-    public AESCryptoAdapter(KmsClient kmsClient) {
-        this.kmsClient = kmsClient;
-    }
-
+@NoArgsConstructor
+public class AESCryptoAdapter{
     public static String encrypt(String plaintText, SecretKey secretKey) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
